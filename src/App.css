@@ -322,3 +322,18 @@ form button:hover {
 .container.dark .forgot-link:hover {
   color: #a5b4fc;
 }
+/* Email Error Styling */
+form input.error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+form input.error:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+/* Dark Mode Support for Error */
+.container.dark form input.error {
+  border-color: #f87171 !important;
+}

@@ -3,20 +3,17 @@ import "./App.css";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("login");
-  const [forgotMode, setForgotMode] = useState(false); // New state for forgot password
 
   // LOGIN STATES
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [loginEmailError, setLoginEmailError] = useState(false);
 
   // SIGNUP STATES
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // FORGOT PASSWORD STATE
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [resetSent, setResetSent] = useState(false);
+  const [signupEmailError, setSignupEmailError] = useState(false);
 
   // MESSAGE
   const [message, setMessage] = useState("");
@@ -39,6 +36,7 @@ export default function App() {
     level: 0,
   });
 
+  // PASSWORD STRENGTH CHECK
   useEffect(() => {
     checkPasswordStrength(signupPassword);
   }, [signupPassword]);
@@ -59,21 +57,39 @@ export default function App() {
     }
   };
 
+  // EMAIL VALIDATION
   const validateEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // Real-time Email Validation for Login
+  const handleLoginEmailChange = (e) => {
+    const value = e.target.value;
+    setLoginEmail(value);
+    setLoginEmailError(value.length > 0 && !validateEmail(value));
+  };
+
+  // Real-time Email Validation for Signup
+  const handleSignupEmailChange = (e) => {
+    const value = e.target.value;
+    setSignupEmail(value);
+    setSignupEmailError(value.length > 0 && !validateEmail(value));
   };
 
   // SIGNUP
   const handleSignup = (e) => {
     e.preventDefault();
+
     if (!validateEmail(signupEmail)) {
       setMessage("❌ Invalid email format");
       return;
     }
+
     if (signupPassword !== confirmPassword) {
       setMessage("❌ Passwords do not match");
       return;
     }
+
     if (strength.level < 2) {
       setMessage("❌ Password must be at least Medium strength");
       return;
@@ -83,7 +99,11 @@ export default function App() {
     localStorage.setItem("user", JSON.stringify(user));
 
     setMessage("✅ Account created successfully");
-    setSignupEmail(""); setSignupPassword(""); setConfirmPassword("");
+
+    setSignupEmail("");
+    setSignupPassword("");
+    setConfirmPassword("");
+    setSignupEmailError(false);
 
     setTimeout(() => {
       setActiveTab("login");
@@ -94,6 +114,13 @@ export default function App() {
   // LOGIN
   const handleLogin = (e) => {
     e.preventDefault();
+
+    if (!validateEmail(loginEmail)) {
+      setMessage("❌ Please enter a valid email");
+      setLoginEmailError(true);
+      return;
+    }
+
     const storedUser = JSON.parse(localStorage.getItem("user"));
 
     if (!storedUser) {
@@ -106,25 +133,6 @@ export default function App() {
     } else {
       setMessage("❌ Invalid login credentials");
     }
-  };
-
-  // FORGOT PASSWORD
-  const handleForgotPassword = (e) => {
-    e.preventDefault();
-    if (!validateEmail(forgotEmail)) {
-      setMessage("❌ Please enter a valid email");
-      return;
-    }
-
-    setResetSent(true);
-    setMessage("✅ Reset link sent to your email!");
-    
-    setTimeout(() => {
-      setMessage("");
-      setForgotMode(false);
-      setForgotEmail("");
-      setResetSent(false);
-    }, 2500);
   };
 
   // MAINTENANCE PAGE
@@ -154,126 +162,93 @@ export default function App() {
 
       <div className="card">
 
-        {/* TABS - Only show when not in forgot mode */}
-        {!forgotMode && (
-          <div className="tabs">
-            <button className={activeTab === "login" ? "active" : ""} onClick={() => { setActiveTab("login"); setMessage(""); }}>
-              Login
-            </button>
-            <button className={activeTab === "signup" ? "active" : ""} onClick={() => { setActiveTab("signup"); setMessage(""); }}>
-              Signup
-            </button>
-          </div>
-        )}
+        <div className="tabs">
+          <button className={activeTab === "login" ? "active" : ""} onClick={() => { setActiveTab("login"); setMessage(""); }}>
+            Login
+          </button>
+          <button className={activeTab === "signup" ? "active" : ""} onClick={() => { setActiveTab("signup"); setMessage(""); }}>
+            Signup
+          </button>
+        </div>
 
-        {/* MESSAGE */}
         {message && <div className="message">{message}</div>}
 
         {/* LOGIN FORM */}
-        {!forgotMode && activeTab === "login" && (
-          <div className="form-section show">
-            <form onSubmit={handleLogin}>
-              <h2>Welcome Back 👋</h2>
+        <div className={`form-section ${activeTab === "login" ? "show" : "hide"}`}>
+          <form onSubmit={handleLogin}>
+            <h2>Welcome Back 👋</h2>
 
-              <input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
+            <input
+              type="email"
+              placeholder="Email"
+              value={loginEmail}
+              onChange={handleLoginEmailChange}
+              className={loginEmailError ? "error" : ""}
+              required
+            />
 
-              <div className="password-box">
-                <input
-                  type={showLoginPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                />
-                <span onClick={() => setShowLoginPassword(!showLoginPassword)}>
-                  {showLoginPassword ? "🙈" : "👁"}
-                </span>
-              </div>
-
-              {/* Forgot Password Link */}
-              <p 
-                className="forgot-link" 
-                onClick={() => {
-                  setForgotMode(true);
-                  setMessage("");
-                  setLoginEmail("");
-                  setLoginPassword("");
-                }}
-              >
-                Forgot Password?
-              </p>
-
-              <button type="submit">Login</button>
-            </form>
-          </div>
-        )}
-
-        {/* FORGOT PASSWORD FORM */}
-        {forgotMode && (
-          <div className="form-section show">
-            <form onSubmit={handleForgotPassword}>
-              <h2>Forgot Password 🔑</h2>
-              <p style={{ textAlign: "center", marginBottom: "20px", color: "#666" }}>
-                Enter your email and we'll send you a reset link.
-              </p>
-
+            <div className="password-box">
               <input
-                type="email"
-                placeholder="Enter your email"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
+                type={showLoginPassword ? "text" : "password"}
+                placeholder="Password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
                 required
               />
+              <span onClick={() => setShowLoginPassword(!showLoginPassword)}>
+                {showLoginPassword ? "🙈" : "👁"}
+              </span>
+            </div>
 
-              <button type="submit">Send Reset Link</button>
-
-              <p 
-                className="forgot-link" 
-                onClick={() => {
-                  setForgotMode(false);
-                  setResetSent(false);
-                  setForgotEmail("");
-                  setMessage("");
-                }}
-                style={{ textAlign: "center", marginTop: "15px" }}
-              >
-                ← Back to Login
-              </p>
-            </form>
-          </div>
-        )}
+            <button type="submit">Login</button>
+          </form>
+        </div>
 
         {/* SIGNUP FORM */}
-        {!forgotMode && activeTab === "signup" && (
-          <div className="form-section show">
-            <form onSubmit={handleSignup}>
-              <h2>Create Account 🚀</h2>
-              {/* ... existing signup form ... */}
-              <input type="email" placeholder="Email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required />
+        <div className={`form-section ${activeTab === "signup" ? "show" : "hide"}`}>
+          <form onSubmit={handleSignup}>
+            <h2>Create Account 🚀</h2>
 
-              <div className="password-box">
-                <input type={showSignupPassword ? "text" : "password"} placeholder="Password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required />
-                <span onClick={() => setShowSignupPassword(!showSignupPassword)}>{showSignupPassword ? "🙈" : "👁"}</span>
-              </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={signupEmail}
+              onChange={handleSignupEmailChange}
+              className={signupEmailError ? "error" : ""}
+              required
+            />
 
-              <div className="strength-container">
-                <div className="strength-bar" style={{ width: strength.width, background: strength.color }}></div>
-              </div>
-              <p style={{ color: strength.color }}>Password Strength: {strength.text}</p>
+            <div className="password-box">
+              <input
+                type={showSignupPassword ? "text" : "password"}
+                placeholder="Password"
+                value={signupPassword}
+                onChange={(e) => setSignupPassword(e.target.value)}
+                required
+              />
+              <span onClick={() => setShowSignupPassword(!showSignupPassword)}>
+                {showSignupPassword ? "🙈" : "👁"}
+              </span>
+            </div>
 
-              <div className="checklist">
-                <p className={signupPassword.length >= 8 ? "valid" : ""}>✔ Minimum 8 characters</p>
-                <p className={/[A-Z]/.test(signupPassword) && /[a-z]/.test(signupPassword) ? "valid" : ""}>✔ Uppercase & Lowercase</p>
-                <p className={/[0-9]/.test(signupPassword) ? "valid" : ""}>✔ Number</p>
-                <p className={/[^A-Za-z0-9]/.test(signupPassword) ? "valid" : ""}>✔ Special Character</p>
-              </div>
+            <div className="strength-container">
+              <div className="strength-bar" style={{ width: strength.width, background: strength.color }}></div>
+            </div>
 
-              <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            <p style={{ color: strength.color }}>Password Strength: {strength.text}</p>
 
-              <button type="submit">Signup</button>
-            </form>
-          </div>
-        )}
+            <div className="checklist">
+              <p className={signupPassword.length >= 8 ? "valid" : ""}>✔ Minimum 8 characters</p>
+              <p className={/[A-Z]/.test(signupPassword) && /[a-z]/.test(signupPassword) ? "valid" : ""}>✔ Uppercase & Lowercase</p>
+              <p className={/[0-9]/.test(signupPassword) ? "valid" : ""}>✔ Number</p>
+              <p className={/[^A-Za-z0-9]/.test(signupPassword) ? "valid" : ""}>✔ Special Character</p>
+            </div>
+
+            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+
+            <button type="submit">Signup</button>
+          </form>
+        </div>
       </div>
     </div>
   );
