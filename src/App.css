@@ -337,3 +337,93 @@ form input.error:focus {
 .container.dark form input.error {
   border-color: #f87171 !important;
 }
+.remember-me {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 16px 0;
+  font-size: 14px;
+}
+
+.remember-me label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #555;
+}
+
+.container.dark .remember-me label {
+  color: #cbd5e1;
+}
+
+form button:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+/* Portfolio Styles */
+.portfolio-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  color: white;
+  padding: 60px 20px;
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 1.4rem;
+  margin-bottom: 30px;
+  opacity: 0.95;
+}
+
+.btn {
+  padding: 14px 40px;
+  background: white;
+  color: #4f46e5;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  transform: translateY(-5px);
+}
+
+.section {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 40px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.section h2 {
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+}
+
+/* Remember Me */
+.remember-me {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 16px 0;
+  font-size: 14px;
+}
+
+.remember-me label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}

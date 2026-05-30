@@ -3,10 +3,13 @@ import "./App.css";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("login");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // LOGIN STATES
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [loginEmailError, setLoginEmailError] = useState(false);
 
   // SIGNUP STATES
@@ -15,31 +18,24 @@ export default function App() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [signupEmailError, setSignupEmailError] = useState(false);
 
-  // MESSAGE
   const [message, setMessage] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
 
-  // LOGIN STATE
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // PASSWORD SHOW/HIDE
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
 
-  // DARK MODE
-  const [darkMode, setDarkMode] = useState(false);
-
-  // PASSWORD STRENGTH
-  const [strength, setStrength] = useState({
-    text: "",
-    width: "0%",
-    color: "red",
-    level: 0,
-  });
-
-  // PASSWORD STRENGTH CHECK
+  // Load remembered email
   useEffect(() => {
-    checkPasswordStrength(signupPassword);
-  }, [signupPassword]);
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setLoginEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
   const checkPasswordStrength = (password) => {
     let score = 0;
@@ -48,32 +44,53 @@ export default function App() {
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 1) {
-      setStrength({ text: "Weak", width: "33%", color: "#ff4d4d", level: 1 });
-    } else if (score <= 3) {
-      setStrength({ text: "Medium", width: "66%", color: "#ffaa00", level: 2 });
-    } else {
-      setStrength({ text: "Strong", width: "100%", color: "#00cc66", level: 3 });
-    }
+    // You can expand this if needed
   };
 
-  // EMAIL VALIDATION
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  // Real-time Email Validation for Login
+  // Handle Login Email Change
   const handleLoginEmailChange = (e) => {
     const value = e.target.value;
     setLoginEmail(value);
     setLoginEmailError(value.length > 0 && !validateEmail(value));
+    setMessage("");
   };
 
-  // Real-time Email Validation for Signup
+  // Handle Signup Email Change
   const handleSignupEmailChange = (e) => {
     const value = e.target.value;
     setSignupEmail(value);
     setSignupEmailError(value.length > 0 && !validateEmail(value));
+    setMessage("");
+  };
+
+  // LOGIN
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage("");
+
+    if (!validateEmail(loginEmail)) {
+      setMessage("❌ Please enter a valid email");
+      setLoginEmailError(true);
+      setIsLoading(false);
+      return;
+    }
+
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    setTimeout(() => {
+      if (storedUser && loginEmail === storedUser.email && loginPassword === storedUser.password) {
+        if (rememberMe) {
+          localStorage.setItem("rememberedEmail", loginEmail);
+        } else {
+          localStorage.removeItem("rememberedEmail");
+        }
+        setIsLoggedIn(true);
+      } else {
+        setMessage("❌ Invalid email or password");
+      }
+      setIsLoading(false);
+    }, 800);
   };
 
   // SIGNUP
@@ -90,15 +107,15 @@ export default function App() {
       return;
     }
 
-    if (strength.level < 2) {
-      setMessage("❌ Password must be at least Medium strength");
+    if (signupPassword.length < 6) {
+      setMessage("❌ Password must be at least 6 characters");
       return;
     }
 
     const user = { email: signupEmail, password: signupPassword };
     localStorage.setItem("user", JSON.stringify(user));
 
-    setMessage("✅ Account created successfully");
+    setMessage("✅ Account created successfully!");
 
     setSignupEmail("");
     setSignupPassword("");
@@ -111,62 +128,66 @@ export default function App() {
     }, 1500);
   };
 
-  // LOGIN
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    if (!validateEmail(loginEmail)) {
-      setMessage("❌ Please enter a valid email");
-      setLoginEmailError(true);
-      return;
-    }
-
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (!storedUser) {
-      setMessage("❌ No account found");
-      return;
-    }
-
-    if (loginEmail === storedUser.email && loginPassword === storedUser.password) {
-      setIsLoggedIn(true);
-    } else {
-      setMessage("❌ Invalid login credentials");
-    }
-  };
-
-  // MAINTENANCE PAGE
+  // PORTFOLIO PAGE (Shown after successful login)
   if (isLoggedIn) {
     return (
-      <div className="welcome-page">
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <h1 style={{ fontSize: "42px", marginBottom: "20px" }}>🔄 Under Maintenance</h1>
-          <h2 style={{ color: "#fff", fontSize: "28px", marginBottom: "30px" }}>
-            We are updating this page.<br />
-            Please wait for 1-2 weeks.
-          </h2>
-          <button className="logout-btn" onClick={() => setIsLoggedIn(false)}>
-            Logout
+      <div className="portfolio-container">
+        <div className="hero">
+          <h1>Hi, I'm Roshan Rijal </h1>
+          <p>Web Developer | React Enthusiast | Creative Coder</p>
+          <button className="btn" onClick={() => window.open("#", "_blank")}>
+            Download Resume
           </button>
         </div>
+
+        <div className="section">
+          <h2>About Me</h2>
+          <p>
+            Passionate web developer who loves building beautiful and functional 
+            user interfaces. Currently learning full-stack development and creating 
+            modern web experiences.
+          </p>
+        </div>
+
+        <div className="section">
+          <h2>Projects</h2>
+          <p>Coming Soon - Portfolio Projects will be added here...</p>
+        </div>
+
+        <div className="section">
+          <h2>Skills</h2>
+          <p>React • JavaScript • CSS • HTML • Firebase • Tailwind</p>
+        </div>
+
+        <button 
+          className="logout-btn"
+          onClick={() => setIsLoggedIn(false)}
+          style={{ marginTop: "40px" }}
+        >
+          Logout
+        </button>
       </div>
     );
   }
 
   return (
     <div className={`container ${darkMode ? "dark" : ""}`}>
-
       <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
         {darkMode ? "☀ Light Mode" : "🌙 Dark Mode"}
       </button>
 
       <div className="card">
-
         <div className="tabs">
-          <button className={activeTab === "login" ? "active" : ""} onClick={() => { setActiveTab("login"); setMessage(""); }}>
+          <button
+            className={activeTab === "login" ? "active" : ""}
+            onClick={() => { setActiveTab("login"); setMessage(""); }}
+          >
             Login
           </button>
-          <button className={activeTab === "signup" ? "active" : ""} onClick={() => { setActiveTab("signup"); setMessage(""); }}>
+          <button
+            className={activeTab === "signup" ? "active" : ""}
+            onClick={() => { setActiveTab("signup"); setMessage(""); }}
+          >
             Signup
           </button>
         </div>
@@ -200,7 +221,20 @@ export default function App() {
               </span>
             </div>
 
-            <button type="submit">Login</button>
+            <div className="remember-me">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                Remember Me
+              </label>
+            </div>
+
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
+            </button>
           </form>
         </div>
 
@@ -231,20 +265,13 @@ export default function App() {
               </span>
             </div>
 
-            <div className="strength-container">
-              <div className="strength-bar" style={{ width: strength.width, background: strength.color }}></div>
-            </div>
-
-            <p style={{ color: strength.color }}>Password Strength: {strength.text}</p>
-
-            <div className="checklist">
-              <p className={signupPassword.length >= 8 ? "valid" : ""}>✔ Minimum 8 characters</p>
-              <p className={/[A-Z]/.test(signupPassword) && /[a-z]/.test(signupPassword) ? "valid" : ""}>✔ Uppercase & Lowercase</p>
-              <p className={/[0-9]/.test(signupPassword) ? "valid" : ""}>✔ Number</p>
-              <p className={/[^A-Za-z0-9]/.test(signupPassword) ? "valid" : ""}>✔ Special Character</p>
-            </div>
-
-            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
 
             <button type="submit">Signup</button>
           </form>
